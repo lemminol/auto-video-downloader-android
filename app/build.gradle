@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.lemminol.avd'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.lemminol.avd'
+        minSdk 26
+        targetSdk 36
+        versionCode 5
+        versionName '1.1.4'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// AGP 9.4.0-safe APK naming.
+// Do not use the removed legacy applicationVariants API here.
+def avdVersionName = android.defaultConfig.versionName
+
+tasks.register("copyRenamedDebugApk") {
+    group = "build"
+    description = "Create AVDv<version>.apk after a debug APK build"
+    doLast {
+        def apkDir = layout.buildDirectory.dir("outputs/apk/debug").get().asFile
+        def sourceApk = new File(apkDir, "app-debug.apk")
+        if (!sourceApk.exists()) {
+            throw new GradleException("Debug APK not found: ${sourceApk}")
+        }
+        def renamedApk = new File(apkDir, "AVDv${avdVersionName}.apk")
+        copy {
+            from sourceApk
+            into apkDir
+            rename { renamedApk.name }
+        }
+        println "AVD APK: ${renamedApk}"
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy("copyRenamedDebugApk")
+}
+

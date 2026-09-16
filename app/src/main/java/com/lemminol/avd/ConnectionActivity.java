@@ -17,6 +17,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,7 +64,7 @@ public class ConnectionActivity extends Activity {
         localCard.addView(local);
         Button useNetwork = button("현재 네트워크 사용"); useNetwork.setOnClickListener(v -> useCurrentNetwork()); localCard.addView(useNetwork); root.addView(localCard);
 
-        LinearLayout externalCard = card(); externalCard.addView(section("▣  외부 네트워크")); externalCard.addView(body("선호 Wi‑Fi가 아닐 때 위에서부터 연결 가능한 첫 번째 HTTPS 주소를 사용합니다."));
+        LinearLayout externalCard = card(); externalCard.addView(section("▣  외부 네트워크")); externalCard.addView(body("선호 Wi‑Fi가 아닐 때 위에서부터 연결 가능한 첫 번째 주소를 사용합니다. 등록할 때 HTTPS 또는 HTTP를 선택하세요."));
         externalList = new LinearLayout(this); externalList.setOrientation(LinearLayout.VERTICAL); externalCard.addView(externalList); renderExternalRows();
         Button add = button("＋ 엔드포인트 추가"); add.setOnClickListener(v -> addEndpointDialog()); externalCard.addView(add); root.addView(externalCard);
 
@@ -101,10 +105,57 @@ public class ConnectionActivity extends Activity {
     }
 
     private void addEndpointDialog() {
-        EditText input=edit("https://example.com", ""); input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_URI);
-        new AlertDialog.Builder(this).setTitle("외부 엔드포인트 추가").setView(input).setNegativeButton("취소",null).setPositiveButton("추가",(d,w)->{
-            String e=EndpointManager.normalizeEndpoint(input.getText().toString(),false); if(e.isEmpty()){Toast.makeText(this,"HTTPS 주소를 확인하세요.",Toast.LENGTH_LONG).show();return;} if(!externals.contains(e))externals.add(e);renderExternalRows();
-        }).show();
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(20), dp(8), dp(20), dp(8));
+        RadioGroup protocols = new RadioGroup(this);
+        protocols.setOrientation(RadioGroup.HORIZONTAL);
+        RadioButton https = new RadioButton(this);
+        https.setId(View.generateViewId());
+        https.setText("https://");
+        RadioButton http = new RadioButton(this);
+        http.setId(View.generateViewId());
+        http.setText("http://");
+        protocols.addView(https);
+        protocols.addView(http);
+        protocols.check(https.getId());
+        content.addView(protocols);
+        EditText input = edit("example.com:8792 또는 IP:포트", "");
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        content.addView(input);
+        TextView help = body("HTTP는 연결 내용을 암호화하지 않습니다. HTTPS 서버라면 HTTPS를 선택하세요.");
+        content.addView(help);
+        input.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String value = s.toString().trim().toLowerCase(java.util.Locale.ROOT);
+                if (value.startsWith("https://")) protocols.check(https.getId());
+                else if (value.startsWith("http://")) protocols.check(http.getId());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("외부 엔드포인트 추가").setView(content)
+                .setNegativeButton("취소", null).setPositiveButton("추가", null).create();
+        dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String raw = input.getText().toString().trim();
+            // The selected radio button is authoritative; pasted schemes are not duplicated.
+            String address = raw.replaceFirst("(?i)^https?://", "");
+            if (address.isEmpty() || address.contains("://")) {
+                input.setError("서버 주소를 입력하세요.");
+                return;
+            }
+            String scheme = protocols.getCheckedRadioButtonId() == http.getId() ? "http://" : "https://";
+            String endpoint = EndpointManager.normalizeEndpoint(scheme + address, false);
+            if (endpoint.isEmpty()) {
+                input.setError("서버 주소와 포트를 확인하세요.");
+                return;
+            }
+            if (!externals.contains(endpoint)) externals.add(endpoint);
+            renderExternalRows();
+            dialog.dismiss();
+        }));
+        dialog.show();
     }
 
     private void saveSettings() {
@@ -113,7 +164,7 @@ public class ConnectionActivity extends Activity {
         for (String e : externals) {
             String n = EndpointManager.normalizeEndpoint(e, false);
             if (n.isEmpty()) {
-                Toast.makeText(this, "외부 주소는 HTTPS 주소여야 합니다: " + e, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "외부 HTTP/HTTPS 주소를 확인하세요: " + e, Toast.LENGTH_LONG).show();
                 return;
             }
             normalized.add(n);

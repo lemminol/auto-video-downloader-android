@@ -110,7 +110,7 @@ public final class EndpointManager {
             conn.setUseCaches(false);
             conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("Accept", "application/json");
-            conn.setRequestProperty("User-Agent", "AVD-Android/1.1.5");
+            conn.setRequestProperty("User-Agent", "AVD-Android/1.1.8");
             int status = conn.getResponseCode();
             if (status != 200) return false;
             if (!requireIdentity) return true;
@@ -178,7 +178,7 @@ public final class EndpointManager {
         if (!https.isEmpty()) out.add(https);
 
         String http = normalizeEndpoint("http://" + value, true);
-        if (!http.isEmpty() && !out.contains(http)) out.add(http);
+        if (!http.isEmpty() && isPrivateHost(URI.create(http).getHost()) && !out.contains(http)) out.add(http);
         return out;
     }
 
@@ -191,9 +191,9 @@ public final class EndpointManager {
             String scheme = safe(uri.getScheme()).toLowerCase();
             String host = safe(uri.getHost()).toLowerCase();
             if (host.isEmpty() || !(scheme.equals("http") || scheme.equals("https"))) return "";
-            if (scheme.equals("http") && !isPrivateHost(host)) return "";
-            if (!localAllowed && !scheme.equals("https")) return "";
+            if (uri.getRawUserInfo() != null) return "";
             int port = uri.getPort();
+            if (port == 0 || port > 65535) return "";
             String authority = host + (port > 0 ? ":" + port : "");
             return scheme + "://" + authority;
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public final class EndpointManager {
             String scheme = safe(uri.getScheme()).toLowerCase();
             String host = safe(uri.getHost()).toLowerCase();
             if (scheme.equals("https")) return !host.isEmpty();
-            return scheme.equals("http") && isPrivateHost(host);
+            return scheme.equals("http") && !host.isEmpty() && !normalizeEndpoint(endpoint, true).isEmpty();
         } catch (Exception e) { return false; }
     }
 

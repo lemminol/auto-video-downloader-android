@@ -1,0 +1,6 @@
+<resources>
+    <color name="avd_primary">#3559A6</color>
+    <color name="avd_primary_dark">#203C79</color>
+    <color name="avd_bg">#F8F7FF</color>
+    <color name="avd_text">#24252B</color>
+</resources>

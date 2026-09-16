@@ -18,7 +18,18 @@ Auto Video Downloader 서버용 Android 전용 클라이언트입니다.
 - 외부 HTTP 엔드포인트 금지, 사설망 HTTP만 허용
 - SSL 인증서 오류 시 우회하지 않고 연결 차단
 
-## 빌드
+## 기본 APK 빌드 경로
+
+APK는 이 저장소의 [GitHub Actions](https://github.com/lemminol/auto-video-downloader-android/actions/workflows/build-apk.yml)에서 빌드합니다. `main`에 변경을 올리면 자동 실행되며, Actions → Build Android APK → Run workflow로 수동 실행할 수도 있습니다. 성공한 실행의 Artifacts에서 `AVDv<버전>` ZIP을 내려받아 APK를 꺼내세요. 버전과 APK 이름은 `app/build.gradle`을 기준으로 자동 반영됩니다.
+
+## v1.1.6
+
+- 화면 시스템 여백이 WebView에 중복 적용되는 문제를 수정했습니다.
+- 키보드와 화면 잘림 영역을 반영하고 시스템 영역 배경색을 맞췄습니다.
+- 로그인 유지와 파일·폴더 선택/용량/하단 도구막대 수정은 서버 v61을 함께 적용해야 합니다. 서버 로그인 화면의 '로그인 유지 (30일)'를 체크해 다시 로그인하세요.
+- GitHub Actions는 Debug APK를 생성합니다. 기존 설치 앱과 서명이 같아야 덮어쓰기 업데이트가 가능합니다.
+
+## 로컬 빌드 (선택)
 
 Android Studio Quail 4 (2026.1.4) / AGP 9.4.0 / JDK 17 이상을 권장합니다.
 
@@ -49,7 +60,7 @@ gradle :app:assembleDebug
 
 ## GitHub Actions로 APK 만들기
 
-프로젝트를 GitHub 저장소에 올리면 `.github/workflows/build-apk.yml`이 Android SDK 36을 설치하고 Debug APK를 빌드합니다. Actions의 `Build Android APK` 결과에서 `AutoVideoDownloader-debug-apk` 아티팩트를 받으면 됩니다.
+프로젝트를 GitHub 저장소에 올리면 `.github/workflows/build-apk.yml`이 Android SDK 36을 설치하고 Debug APK를 빌드합니다. Actions의 `Build Android APK` 결과에서 `AVDv<버전>` 아티팩트를 받으면 됩니다.
 
 
 ## v1.1.0 fixes
@@ -92,9 +103,10 @@ This project also accepts `JAVA_HOME` or `JDK17_HOME` when Gradle auto-detects t
 
 ## APK 파일명
 
-Android Studio에서 `Generate APKs`를 실행하면 기본 `app-debug.apk`와 함께 `app/build/outputs/apk/debug/AVDv1.1.5.apk`가 자동 생성됩니다. AGP 9.4.0에서 제거된 `applicationVariants` API는 사용하지 않습니다.
+Android Studio에서 `Generate APKs`를 실행하면 기본 `app-debug.apk`와 함께 `app/build/outputs/apk/debug/AVDv1.1.6.apk`가 자동 생성됩니다. AGP 9.4.0에서 제거된 `applicationVariants` API는 사용하지 않습니다.
 
 
 ## v1.1.5 build fix
 - Fixed Groovy syntax error in APK rename task.
-- Debug build creates both `app-debug.apk` and `AVDv1.1.5.apk`.
+- Debug build creates both `app-debug.apk` and `AVDv1.1.6.apk`.
+

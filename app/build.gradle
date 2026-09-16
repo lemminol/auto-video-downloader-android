@@ -10,8 +10,8 @@ android {
         applicationId 'com.lemminol.avd'
         minSdk 26
         targetSdk 36
-        versionCode 6
-        versionName '1.1.5'
+        versionCode 7
+        versionName '1.1.6'
     }
 
     buildTypes {
@@ -52,4 +52,5 @@ tasks.register("copyRenamedDebugApk") {
 tasks.matching { it.name == "assembleDebug" }.configureEach {
     finalizedBy("copyRenamedDebugApk")
 }
+
 

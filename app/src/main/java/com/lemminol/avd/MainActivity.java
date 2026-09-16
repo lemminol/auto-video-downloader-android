@@ -79,10 +79,18 @@ public class MainActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.rgb(248,247,255));
+        root.setBackgroundColor(Color.rgb(16,20,24));
+        getWindow().setStatusBarColor(Color.rgb(16,20,24));
+        getWindow().setNavigationBarColor(Color.rgb(16,20,24));
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            getWindow().setDecorFitsSystemWindows(false);
+            android.view.WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) controller.setSystemBarsAppearance(0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+        }
         applySystemInsets(root, 0, 0, 0, 0);
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setBackgroundColor(Color.rgb(248,247,255));
         bar.setPadding(dp(14), dp(5), dp(8), dp(5));
         endpointText = new TextView(this);
         endpointText.setText("서버 연결 확인 중…");
@@ -375,13 +383,13 @@ public class MainActivity extends Activity {
     private void applySystemInsets(View view, int baseLeft, int baseTop, int baseRight, int baseBottom) {
         view.setOnApplyWindowInsetsListener((v, insets) -> {
             if (android.os.Build.VERSION.SDK_INT >= 30) {
-                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
+                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
                 v.setPadding(baseLeft + bars.left, baseTop + bars.top, baseRight + bars.right, baseBottom + bars.bottom);
             } else {
                 // Android 10 and older are not forced edge-to-edge here.
                 v.setPadding(baseLeft, baseTop, baseRight, baseBottom);
             }
-            return insets;
+            return android.os.Build.VERSION.SDK_INT >= 30 ? WindowInsets.CONSUMED : insets;
         });
         view.requestApplyInsets();
     }
@@ -395,3 +403,4 @@ public class MainActivity extends Activity {
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
+

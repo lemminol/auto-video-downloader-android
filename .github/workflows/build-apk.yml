@@ -5,8 +5,16 @@ on:
   push:
     branches: [ main ]
 
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -54,4 +62,38 @@ jobs:
           name: ${{ steps.apk.outputs.name }}
           path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
+
+
+      - name: Publish APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          APK_PATH: ${{ steps.apk.outputs.path }}
+          APK_NAME: ${{ steps.apk.outputs.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${APK_NAME#AVD}-build.${GITHUB_RUN_NUMBER}"
+          title="${APK_NAME} · Build ${GITHUB_RUN_NUMBER}"
+          notes="${RUNNER_TEMP}/apk-release-notes.md"
+          cat > "$notes" <<EOF
+          Android APK를 아래 Assets에서 바로 다운로드하여 설치하세요.
+
+          - APK: ${APK_NAME}.apk
+          - 소스 커밋: ${GITHUB_SHA}
+          - 빌드: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - Debug APK입니다. 기존 앱과 서명이 같아야 덮어쓰기 업데이트가 가능합니다.
+          - 로그인 유지 및 파일 선택 개선은 서버 v61 이상을 함께 적용하세요.
+          EOF
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" --target "$GITHUB_SHA" --title "$title" --notes-file "$notes" --draft
+          fi
+          gh release upload "$tag" "$APK_PATH" --clobber
+          gh release edit "$tag" --draft=false --latest --title "$title" --notes-file "$notes"
+          {
+            echo "### APK 다운로드"
+            echo "[${APK_NAME}.apk](https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${APK_NAME}.apk)"
+            echo ""
+            echo "[릴리스 보기](https://github.com/${GITHUB_REPOSITORY}/releases/tag/${tag})"
+          } >> "$GITHUB_STEP_SUMMARY"
 

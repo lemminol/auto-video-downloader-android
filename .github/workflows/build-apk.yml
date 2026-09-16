@@ -37,9 +37,21 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace
 
+      - name: Detect APK filename
+        id: apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(app/build/outputs/apk/debug/AVDv*.apk)
+          test "${#files[@]}" -eq 1
+          test -f "${files[0]}"
+          echo "path=${files[0]}" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "${files[0]}" .apk)" >> "$GITHUB_OUTPUT"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AVDv1.1.5
-          path: app/build/outputs/apk/debug/AVDv1.1.5.apk
+          name: ${{ steps.apk.outputs.name }}
+          path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
+

@@ -84,8 +84,6 @@ public class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.rgb(16,20,24));
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
-            android.view.WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) controller.setSystemBarsAppearance(0, android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
         }
         applySystemInsets(root, 0, 0, 0, 0);
         LinearLayout bar = new LinearLayout(this);
@@ -383,6 +381,14 @@ public class MainActivity extends Activity {
     private void applySystemInsets(View view, int baseLeft, int baseTop, int baseRight, int baseBottom) {
         view.setOnApplyWindowInsetsListener((v, insets) -> {
             if (android.os.Build.VERSION.SDK_INT >= 30) {
+                // Insets are delivered to an attached view. Avoid querying PhoneWindow
+                // before setContentView(), when its DecorView may still be null.
+                android.view.WindowInsetsController controller = v.getWindowInsetsController();
+                if (controller != null) {
+                    controller.setSystemBarsAppearance(0,
+                            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                            | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+                }
                 android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
                 v.setPadding(baseLeft + bars.left, baseTop + bars.top, baseRight + bars.right, baseBottom + bars.bottom);
             } else {
@@ -403,4 +409,5 @@ public class MainActivity extends Activity {
 
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
+
 

@@ -53,9 +53,11 @@ public class ConnectionActivity extends Activity {
 
         autoSwitch = new Switch(this); autoSwitch.setText("자동 URL 전환\n지정된 Wi‑Fi에서는 내부망, 그 외에는 외부 엔드포인트를 사용합니다."); autoSwitch.setTextSize(15); autoSwitch.setChecked(manager.isAutoSwitch()); autoSwitch.setPadding(0, dp(18), 0, dp(18)); root.addView(autoSwitch);
 
-        LinearLayout localCard = card(); localCard.addView(section("⌂  로컬 네트워크")); localCard.addView(body("지정한 Wi‑Fi에서 사용할 서버 주소입니다. HTTP는 사설망 주소에서만 허용합니다."));
-        ssid = edit("Wi‑Fi 이름", manager.getPreferredSsid()); localCard.addView(ssid);
-        local = edit("서버 엔드포인트", manager.getLocalEndpoint()); localCard.addView(local);
+        LinearLayout localCard = card(); localCard.addView(section("⌂  서버 주소")); localCard.addView(body("서버 주소 또는 IP를 직접 입력하세요. http:// 또는 https://를 생략하면 HTTPS를 먼저 확인하고, 사설망 주소는 HTTP까지 자동으로 확인합니다."));
+        ssid = edit("Wi‑Fi 이름 (선택)", manager.getPreferredSsid()); localCard.addView(ssid);
+        local = edit("예: 192.168.1.10:8792 또는 example.com", manager.getLocalEndpoint());
+        local.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_URI);
+        localCard.addView(local);
         Button useNetwork = button("현재 네트워크 사용"); useNetwork.setOnClickListener(v -> useCurrentNetwork()); localCard.addView(useNetwork); root.addView(localCard);
 
         LinearLayout externalCard = card(); externalCard.addView(section("▣  외부 네트워크")); externalCard.addView(body("선호 Wi‑Fi가 아닐 때 위에서부터 연결 가능한 첫 번째 HTTPS 주소를 사용합니다."));
@@ -63,7 +65,7 @@ public class ConnectionActivity extends Activity {
         Button add = button("＋ 엔드포인트 추가"); add.setOnClickListener(v -> addEndpointDialog()); externalCard.addView(add); root.addView(externalCard);
 
         Button save = button("저장하고 연결"); save.setOnClickListener(v -> saveSettings()); root.addView(save);
-        TextView note = body("Wi‑Fi 이름을 자동 판별하려면 Android 위치 권한과 기기의 위치 서비스가 필요할 수 있습니다. 앱은 외부 HTTP 주소를 허용하지 않습니다."); note.setPadding(0,dp(12),0,0); root.addView(note);
+        TextView note = body("주소에 프로토콜을 쓰지 않아도 됩니다. HTTPS를 우선 사용하며, 192.168.x.x / 10.x.x.x / 172.16~31.x.x 같은 사설망 주소는 HTTPS 실패 시 HTTP를 자동으로 확인합니다. Wi‑Fi 이름은 선택 사항입니다."); note.setPadding(0,dp(12),0,0); root.addView(note);
         scroll.addView(root); return scroll;
     }
 
@@ -106,11 +108,59 @@ public class ConnectionActivity extends Activity {
     }
 
     private void saveSettings() {
-        String localEndpoint=EndpointManager.normalizeEndpoint(local.getText().toString(),true);
-        if(localEndpoint.isEmpty()){Toast.makeText(this,"로컬 서버 주소를 확인하세요. 사설망 HTTP 또는 HTTPS 주소를 입력하세요.",Toast.LENGTH_LONG).show();return;}
-        List<String> normalized=new ArrayList<>(); for(String e:externals){String n=EndpointManager.normalizeEndpoint(e,false);if(n.isEmpty()){Toast.makeText(this,"외부 주소는 HTTPS만 사용할 수 있습니다: "+e,Toast.LENGTH_LONG).show();return;}normalized.add(n);}
-        manager.setAutoSwitch(autoSwitch.isChecked()); manager.setPreferredSsid(ssid.getText().toString().trim()); manager.setLocalEndpoint(localEndpoint); manager.setExternalEndpoints(normalized);
-        setResult(RESULT_OK,new Intent()); finish();
+        String rawLocal = local.getText().toString().trim();
+        List<String> normalized = new ArrayList<>();
+        for (String e : externals) {
+            String n = EndpointManager.normalizeEndpoint(e, false);
+            if (n.isEmpty()) {
+                Toast.makeText(this, "외부 주소는 HTTPS 주소여야 합니다: " + e, Toast.LENGTH_LONG).show();
+                return;
+            }
+            normalized.add(n);
+        }
+
+        if (rawLocal.isEmpty() && normalized.isEmpty()) {
+            Toast.makeText(this, "연결할 서버 주소를 입력하세요.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // If no local/manual URL was entered, save external endpoints only.
+        if (rawLocal.isEmpty()) {
+            manager.setAutoSwitch(autoSwitch.isChecked());
+            manager.setPreferredSsid(ssid.getText().toString().trim());
+            manager.setLocalEndpoint("");
+            manager.setExternalEndpoints(normalized);
+            setResult(RESULT_OK, new Intent());
+            finish();
+            return;
+        }
+
+        Toast.makeText(this, "서버 주소와 프로토콜을 확인 중입니다…", Toast.LENGTH_SHORT).show();
+        io.execute(() -> {
+            String resolved = manager.resolveUserEndpoint(rawLocal);
+            runOnUiThread(() -> {
+                if (resolved.isEmpty()) {
+                    StringBuilder tried = new StringBuilder();
+                    for (String c : EndpointManager.userEndpointCandidates(rawLocal)) {
+                        if (tried.length() > 0) tried.append(" / ");
+                        tried.append(c);
+                    }
+                    Toast.makeText(this, tried.length() == 0
+                                    ? "서버 주소 형식을 확인하세요."
+                                    : "연결할 수 없습니다. 확인한 주소: " + tried,
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+                manager.setAutoSwitch(autoSwitch.isChecked());
+                manager.setPreferredSsid(ssid.getText().toString().trim());
+                manager.setLocalEndpoint(resolved);
+                manager.setExternalEndpoints(normalized);
+                local.setText(resolved);
+                Toast.makeText(this, "연결 주소: " + resolved, Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK, new Intent());
+                finish();
+            });
+        });
     }
 
     private LinearLayout card(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);v.setPadding(dp(16),dp(14),dp(16),dp(14));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);lp.setMargins(0,dp(8),0,dp(8));v.setLayoutParams(lp);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(249,248,255));g.setStroke(dp(1),Color.rgb(220,220,228));g.setCornerRadius(dp(20));v.setBackground(g);return v;}

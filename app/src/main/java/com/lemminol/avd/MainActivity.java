@@ -66,7 +66,14 @@ public class MainActivity extends Activity {
         captureIncoming(getIntent());
         requestWifiPermissionIfNeeded();
         registerNetworkCallback();
-        selectEndpoint(false);
+        if (endpoints.hasConfiguredEndpoints()) {
+            selectEndpoint(false);
+        } else {
+            progress.setVisibility(View.GONE);
+            endpointText.setText("서버 주소를 입력하세요");
+            endpointText.setTextColor(Color.rgb(80,80,90));
+            main.post(() -> startActivityForResult(new Intent(this, ConnectionActivity.class), REQ_CONNECTION));
+        }
     }
 
     private void buildUi() {
@@ -285,7 +292,7 @@ public class MainActivity extends Activity {
         activeEndpoint = "";
         endpointText.setText("● 연결 가능한 서버 없음");
         endpointText.setTextColor(Color.rgb(180,45,45));
-        String html = "<html><meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;background:#101418;color:#eee;padding:28px'><h2>서버에 연결할 수 없습니다</h2><p>연결 설정에서 로컬 주소와 외부 주소를 확인하세요.</p><button style='padding:12px 18px' onclick=\"location.href='avd://settings'\">연결 설정</button></body></html>";
+        String html = "<html><meta name='viewport' content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;background:#101418;color:#eee;padding:28px'><h2>서버에 연결할 수 없습니다</h2><p>연결 설정에서 서버 주소를 직접 입력하세요. http:// 또는 https://는 생략할 수 있습니다.</p><button style='padding:12px 18px' onclick=\"location.href='avd://settings'\">서버 주소 입력</button></body></html>";
         web.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
     }
 

@@ -45,7 +45,7 @@ gradle :app:assembleDebug
 
 ## 기본 로컬 주소
 
-초기값은 `http://192.168.50.242:8792`입니다. 앱의 `연결` 화면에서 변경할 수 있습니다.
+초기 서버 주소는 비어 있습니다. 앱의 `연결` 화면에서 사용자가 직접 서버 주소/IP를 입력합니다. `http://` 또는 `https://`를 생략하면 HTTPS를 먼저 시도하고, 사설망 주소에서는 HTTP도 자동으로 확인합니다.
 
 ## GitHub Actions로 APK 만들기
 
@@ -56,7 +56,7 @@ gradle :app:assembleDebug
 
 - Android 15/16 edge-to-edge system bar insets: the connection bar and settings screen no longer render under the status/navigation bars.
 - WebView login session hardening: cookies are flushed after navigation and when the app is paused/stopped.
-- Automatic network callbacks keep the currently connected endpoint while it remains healthy, preventing a post-login switch between `auto.lemminol.xyz` and `192.168.50.242` from appearing as an unexpected logout.
+- Automatic network callbacks keep the currently connected endpoint while it remains healthy, preventing a post-login switch between an external hostname and an internal/LAN address from appearing as an unexpected logout.
 - The manual **재연결** button and saving connection settings still force endpoint re-selection.
 
 ## Windows / Android Studio JDK requirement
@@ -81,7 +81,7 @@ Both commands must work. Do not use an Android Studio `jbr` directory that does 
 This project also accepts `JAVA_HOME` or `JDK17_HOME` when Gradle auto-detects toolchains.
 
 
-## v1.1.4 connection UI
+## v1.1.5 connection UI
 
 - External endpoint rows prioritize the URL width.
 - Endpoint URLs stay on one line and use middle ellipsis when space is insufficient.
@@ -92,9 +92,9 @@ This project also accepts `JAVA_HOME` or `JDK17_HOME` when Gradle auto-detects t
 
 ## APK 파일명
 
-Android Studio에서 `Generate APKs`를 실행하면 기본 `app-debug.apk`와 함께 `app/build/outputs/apk/debug/AVDv1.1.4.apk`가 자동 생성됩니다. AGP 9.4.0에서 제거된 `applicationVariants` API는 사용하지 않습니다.
+Android Studio에서 `Generate APKs`를 실행하면 기본 `app-debug.apk`와 함께 `app/build/outputs/apk/debug/AVDv1.1.5.apk`가 자동 생성됩니다. AGP 9.4.0에서 제거된 `applicationVariants` API는 사용하지 않습니다.
 
 
-## v1.1.4 build fix
+## v1.1.5 build fix
 - Fixed Groovy syntax error in APK rename task.
-- Debug build creates both `app-debug.apk` and `AVDv1.1.4.apk`.
+- Debug build creates both `app-debug.apk` and `AVDv1.1.5.apk`.

@@ -1,4 +1,4 @@
-# Android 1.1.13 / versionCode 14
+# Android 1.1.14 / versionCode 15
 
 GitHub Actions가 매번 다른 디버그 키를 생성해 업데이트 설치가 거부되던 문제를 수정했습니다. 워크플로는 GitHub Secrets에 보관한 고정 릴리스 키로 `assembleRelease`를 실행하고 APK 서명과 버전을 검사합니다.
 

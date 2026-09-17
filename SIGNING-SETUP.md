@@ -27,8 +27,8 @@ GitHub 저장소의 `Settings` → `Secrets and variables` → `Actions` → `Ne
 | `AVD_KEY_ALIAS` | `avd` |
 | `AVD_KEY_PASSWORD` | 키 암호 |
 
-그 후 Actions에서 **Build Android APK**를 실행하면 서명된 `AVDv1.1.13.apk`가 Releases에 첨부됩니다.
+그 후 Actions에서 **Build Android APK**를 실행하면 서명된 `AVDv1.1.14.apk`가 Releases에 첨부됩니다.
 
 ## 업데이트 전환
 
-현재 설치된 1.1.12는 이전 GitHub 실행기의 임시 디버그 키로 서명되어 있을 수 있습니다. 이 경우 앱의 서버 주소를 확인한 다음 기존 앱을 한 번 삭제하고 1.1.13을 설치하세요. 이후 빌드에서는 같은 네 개의 Secrets를 유지하면 앱 데이터와 설정을 보존한 채 업데이트됩니다.
+이전 APK가 다른 키로 서명되어 있다면 기존 앱을 한 번 삭제하고 1.1.14를 설치해야 합니다. 이후 빌드에서는 같은 네 개의 Secrets를 유지하면 앱 데이터와 설정을 보존한 채 업데이트됩니다.

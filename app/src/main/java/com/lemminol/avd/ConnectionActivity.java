@@ -48,11 +48,30 @@ public class ConnectionActivity extends Activity {
         refreshCurrentServer();
     }
 
-    private ScrollView buildUi() {
+    private View buildUi() {
+        LinearLayout screen = new LinearLayout(this);
+        screen.setOrientation(LinearLayout.VERTICAL);
+        screen.setBackgroundColor(Color.rgb(248,250,252));
+        applySystemInsets(screen, 0, 0, 0, 0);
+
+        LinearLayout header = row();
+        header.setPadding(dp(14), dp(8), dp(14), dp(8));
+        header.setBackgroundColor(Color.WHITE);
+        header.setElevation(dp(2));
+        Button back = button("←");
+        back.setContentDescription("뒤로가기");
+        styleOutlinedButton(back);
+        back.setOnClickListener(v -> finish());
+        header.addView(back);
+        TextView title = title("연결 설정");
+        header.addView(title, new LinearLayout.LayoutParams(0, dp(44), 1));
+        screen.addView(header, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(60)));
+
         ScrollView scroll = new ScrollView(this);
-        LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(Color.rgb(248,250,252));
-        applySystemInsets(root, dp(18), dp(14), dp(18), dp(28));
-        LinearLayout header = row(); Button back = button("←"); back.setOnClickListener(v -> finish()); header.addView(back); TextView title = title("연결"); header.addView(title, new LinearLayout.LayoutParams(0, dp(44), 1)); root.addView(header);
+        scroll.setFillViewport(true);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(18), dp(12), dp(18), dp(30));
         root.addView(label("🔒  현재 서버 주소")); currentServer = valueText("확인 중…"); root.addView(currentServer);
 
         autoSwitch = new Switch(this); autoSwitch.setText("자동 URL 전환\n지정된 Wi‑Fi에서는 내부망, 그 외에는 외부 엔드포인트를 사용합니다."); autoSwitch.setTextSize(15); autoSwitch.setChecked(manager.isAutoSwitch()); autoSwitch.setPadding(0, dp(18), 0, dp(18)); root.addView(autoSwitch);
@@ -62,15 +81,26 @@ public class ConnectionActivity extends Activity {
         local = edit("예: 192.168.1.10:8792 또는 example.com", manager.getLocalEndpoint());
         local.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_URI);
         localCard.addView(local);
-        Button useNetwork = button("현재 네트워크 사용"); useNetwork.setOnClickListener(v -> useCurrentNetwork()); localCard.addView(useNetwork); root.addView(localCard);
+        Button useNetwork = button("현재 네트워크 사용"); styleOutlinedButton(useNetwork); useNetwork.setOnClickListener(v -> useCurrentNetwork()); localCard.addView(useNetwork); root.addView(localCard);
 
         LinearLayout externalCard = card(); externalCard.addView(section("▣  외부 네트워크")); externalCard.addView(body("선호 Wi‑Fi가 아닐 때 위에서부터 연결 가능한 첫 번째 주소를 사용합니다. 등록할 때 HTTPS 또는 HTTP를 선택하세요."));
         externalList = new LinearLayout(this); externalList.setOrientation(LinearLayout.VERTICAL); externalCard.addView(externalList); renderExternalRows();
-        Button add = button("＋ 엔드포인트 추가"); add.setOnClickListener(v -> addEndpointDialog()); externalCard.addView(add); root.addView(externalCard);
+        Button add = button("＋ 엔드포인트 추가"); styleOutlinedButton(add); add.setOnClickListener(v -> addEndpointDialog()); externalCard.addView(add); root.addView(externalCard);
 
-        Button save = button("저장하고 연결"); save.setOnClickListener(v -> saveSettings()); root.addView(save);
         TextView note = body("주소에 프로토콜을 쓰지 않아도 됩니다. HTTPS를 우선 사용하며, 192.168.x.x / 10.x.x.x / 172.16~31.x.x 같은 사설망 주소는 HTTPS 실패 시 HTTP를 자동으로 확인합니다. Wi‑Fi 이름은 선택 사항입니다."); note.setPadding(0,dp(12),0,0); root.addView(note);
-        scroll.addView(root); return scroll;
+        scroll.addView(root);
+        screen.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+
+        LinearLayout footer = new LinearLayout(this);
+        footer.setPadding(dp(18), dp(10), dp(18), dp(10));
+        footer.setBackgroundColor(Color.WHITE);
+        footer.setElevation(dp(8));
+        Button save = button("저장하고 연결");
+        save.setTextSize(15);
+        save.setOnClickListener(v -> saveSettings());
+        footer.addView(save, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)));
+        screen.addView(footer, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(72)));
+        return screen;
     }
 
     private void refreshCurrentServer() {
@@ -232,6 +262,17 @@ public class ConnectionActivity extends Activity {
                 android.content.res.ColorStateList.valueOf(0x33FFFFFF), shape, null));
         button.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{0xFFCBD5E1,Color.WHITE}));
         button.setAllCaps(false);
+    }
+    private void styleOutlinedButton(Button button) {
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(Color.WHITE);
+        shape.setStroke(dp(1), Color.rgb(203,213,225));
+        shape.setCornerRadius(dp(12));
+        button.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(0x226366F1), shape, null));
+        button.setTextColor(new android.content.res.ColorStateList(
+                new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},
+                new int[]{0xFF94A3B8,0xFF4F46E5}));
     }
     private int dp(int v){return Math.round(v*getResources().getDisplayMetrics().density);}
     private void applySystemInsets(View view, int baseLeft, int baseTop, int baseRight, int baseBottom) {

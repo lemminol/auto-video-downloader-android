@@ -85,19 +85,38 @@ jobs:
           echo "name=$(basename "${files[0]}" .apk)" >> "$GITHUB_OUTPUT"
 
       - name: Verify APK signature and version
-        env:
-          APK_PATH: ${{ steps.apk.outputs.path }}
-        run: |
-          set -euo pipefail
-          apksigner verify --verbose --print-certs "$APK_PATH"
-          aapt dump badging "$APK_PATH" | head -n 1
+  shell: bash
+  run: |
+    set -euo pipefail
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.apk.outputs.name }}
-          path: ${{ steps.apk.outputs.path }}
-          if-no-files-found: error
+    BUILD_TOOLS_DIR="$(
+      find "${ANDROID_SDK_ROOT}/build-tools" \
+        -mindepth 1 -maxdepth 1 -type d -print |
+      sort -V |
+      tail -n 1
+    )"
+
+    if [ -z "$BUILD_TOOLS_DIR" ]; then
+      echo "::error::Android SDK Build Tools를 찾지 못했습니다."
+      exit 1
+    fi
+
+    APKSIGNER="${BUILD_TOOLS_DIR}/apksigner"
+    AAPT="${BUILD_TOOLS_DIR}/aapt"
+
+    test -x "$APKSIGNER" || {
+      echo "::error::apksigner를 찾지 못했습니다: $APKSIGNER"
+      exit 1
+    }
+
+    test -x "$AAPT" || {
+      echo "::error::aapt를 찾지 못했습니다: $AAPT"
+      exit 1
+    }
+
+    echo "Build Tools: $BUILD_TOOLS_DIR"
+    "$APKSIGNER" verify --verbose --print-certs "$APK_PATH"
+    "$AAPT" dump badging "$APK_PATH" | sed -n '1p'
 
 
       - name: Publish APK to GitHub Releases

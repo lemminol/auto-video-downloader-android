@@ -1,4 +1,14 @@
-# Android 1.1.12 / versionCode 13
-상단 URL 숨김. 재연결은 새로고침 아이콘, 연결은 설정 아이콘. 밝은 배경과 연보라색 44dp 버튼, 접근성 이름 및 길게 누르기 설명. WebView, 뒤로가기·종료 확인 유지.
-SDK 경로(local.properties) 미포함. .github/workflows 포함. GitHub에서 APK 빌드 또는 Android Studio에서 로컬 SDK 경로 지정 후 빌드. 동일 서명 키로 업데이트 설치하세요.
-XML 검증 및 소스 확인. APK 빌드·실기기 검증은 수행하지 못했습니다.
+# Android 1.1.13 / versionCode 14
+
+GitHub Actions가 매번 다른 디버그 키를 생성해 업데이트 설치가 거부되던 문제를 수정했습니다. 워크플로는 GitHub Secrets에 보관한 고정 릴리스 키로 `assembleRelease`를 실행하고 APK 서명과 버전을 검사합니다.
+
+필요한 GitHub Actions Secrets:
+
+- `AVD_KEYSTORE_BASE64`
+- `AVD_KEYSTORE_PASSWORD`
+- `AVD_KEY_ALIAS`
+- `AVD_KEY_PASSWORD`
+
+기존 임시 디버그 키로 설치한 앱에서 고정 릴리스 키로 전환할 때는 서명이 달라 한 번 삭제 후 설치해야 합니다. 이후에는 이 키를 바꾸거나 잃어버리지 않는 한 높은 `versionCode`의 APK로 계속 덮어쓰기 업데이트할 수 있습니다.
+
+상단 URL 숨김, 새로고침·설정 아이콘, WebView, 뒤로가기·종료 확인 기능은 유지됩니다. SDK 경로인 `local.properties`와 실제 키 파일은 포함하지 않습니다.

@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+def releaseKeystorePath = System.getenv('AVD_KEYSTORE_PATH')
+def releaseStorePassword = System.getenv('AVD_KEYSTORE_PASSWORD')
+def releaseKeyAlias = System.getenv('AVD_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('AVD_KEY_PASSWORD')
+def releaseSigningReady = [releaseKeystorePath, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+
 android {
     namespace 'com.lemminol.avd'
     compileSdk 36
@@ -10,14 +16,32 @@ android {
         applicationId 'com.lemminol.avd'
         minSdk 26
         targetSdk 36
-        versionCode 13
-        versionName '1.1.12'
+        versionCode 14
+        versionName '1.1.13'
+    }
+
+    signingConfigs {
+        if (releaseSigningReady) {
+            release {
+                storeFile file(releaseKeystorePath)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+                enableV1Signing true
+                enableV2Signing true
+                enableV3Signing true
+                enableV4Signing true
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (releaseSigningReady) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
@@ -53,5 +77,33 @@ tasks.matching { it.name == "assembleDebug" }.configureEach {
     finalizedBy("copyRenamedDebugApk")
 }
 
+tasks.register("copyRenamedReleaseApk") {
+    group = "build"
+    description = "Create a consistently signed AVDv<version>.apk"
+    doLast {
+        if (!releaseSigningReady) {
+            throw new GradleException("Release signing variables are missing")
+        }
+        def apkDir = layout.buildDirectory.dir("outputs/apk/release").get().asFile
+        def sourceApk = new File(apkDir, "app-release.apk")
+        if (!sourceApk.exists()) {
+            throw new GradleException("Signed release APK not found: ${sourceApk}")
+        }
+        copy {
+            from sourceApk
+            into apkDir
+            rename { "AVDv${avdVersionName}.apk" }
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    doFirst {
+        if (!releaseSigningReady) {
+            throw new GradleException("Release signing requires AVD_KEYSTORE_PATH, AVD_KEYSTORE_PASSWORD, AVD_KEY_ALIAS and AVD_KEY_PASSWORD")
+        }
+    }
+    finalizedBy("copyRenamedReleaseApk")
+}
 
 

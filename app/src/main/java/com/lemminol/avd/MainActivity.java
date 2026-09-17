@@ -102,20 +102,36 @@ public class MainActivity extends Activity {
         endpointText.setTextColor(Color.rgb(54,54,61));
         endpointText.setTextSize(12);
         endpointText.setSingleLine(true);
-        bar.addView(endpointText, new LinearLayout.LayoutParams(0, dp(38), 1));
-        Button reconnect = smallButton("재연결");
+        endpointText.setVisibility(View.GONE);
+        View spacer = new View(this);
+        bar.addView(spacer, new LinearLayout.LayoutParams(0, 1, 1));
+        android.widget.ImageButton reconnect = iconButton(R.drawable.ic_refresh, "재연결");
         reconnect.setOnClickListener(v -> forceEndpointSelection());
         bar.addView(reconnect);
-        Button settingsButton = smallButton("연결");
+        android.widget.ImageButton settingsButton = iconButton(R.drawable.ic_settings, "서버 설정");
         settingsButton.setOnClickListener(v -> startActivityForResult(new Intent(this, ConnectionActivity.class), REQ_CONNECTION));
         bar.addView(settingsButton);
-        root.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
+        root.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)));
         progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progress.setIndeterminate(true);
         root.addView(progress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(3)));
         web = new WebView(this);
         root.addView(web, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
         setContentView(root);
+    }
+
+    private android.widget.ImageButton iconButton(int drawable, String description) {
+        android.widget.ImageButton b = new android.widget.ImageButton(this);
+        b.setImageResource(drawable);
+        b.setImageTintList(android.content.res.ColorStateList.valueOf(Color.rgb(99,102,241)));
+        b.setContentDescription(description); b.setTooltipText(description);
+        b.setPadding(dp(10),dp(10),dp(10),dp(10));
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setColor(Color.rgb(238,242,255));shape.setCornerRadius(dp(12));
+        b.setBackground(new android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(0x226366F1),shape,null));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(44),dp(44));
+        lp.setMargins(dp(8),0,0,0);b.setLayoutParams(lp);
+        return b;
     }
 
     private Button smallButton(String text) {

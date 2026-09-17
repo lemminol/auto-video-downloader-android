@@ -1,7 +1,4 @@
-# Android v1.1.11 밝은 디자인
-
-WebView 유지. 연결 화면 흰색 카드, 밝은 배경, 보라색 둥근 버튼, 밝은 시스템 바를 적용했습니다. 웹페이지/로그인은 서버 v72 디자인을 표시합니다. 뒤로가기 및 종료 확인 기능을 유지합니다.
-
-프로젝트 전체(.github 포함)를 GitHub 저장소 루트에 반영 후 Build Android APK 실행. 기존 서명과 같은 키로 빌드한 AVDv1.1.11.apk를 업데이트 설치하세요.
-
-검증: XML 파싱 및 소스 검토. Android SDK 부재로 APK 빌드/실기기 검증은 하지 못했습니다. GitHub 쓰기 시도는 연결 권한 부족 403으로 실패했습니다.
+# Android 1.1.12 / versionCode 13
+상단 URL 숨김. 재연결은 새로고침 아이콘, 연결은 설정 아이콘. 밝은 배경과 연보라색 44dp 버튼, 접근성 이름 및 길게 누르기 설명. WebView, 뒤로가기·종료 확인 유지.
+SDK 경로(local.properties) 미포함. .github/workflows 포함. GitHub에서 APK 빌드 또는 Android Studio에서 로컬 SDK 경로 지정 후 빌드. 동일 서명 키로 업데이트 설치하세요.
+XML 검증 및 소스 확인. APK 빌드·실기기 검증은 수행하지 못했습니다.

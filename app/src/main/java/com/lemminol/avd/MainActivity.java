@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private static final int REQ_WIFI_PERMISSION = 1003;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
+    private android.app.AlertDialog exitDialog;
     private android.window.OnBackInvokedCallback backCallback;
     private EndpointManager endpoints;
     private WebView web;
@@ -379,7 +380,18 @@ public class MainActivity extends Activity {
         if (web != null && web.canGoBack()) {
             web.goBack();
         } else {
-            Toast.makeText(this, "이전 페이지가 없습니다.", Toast.LENGTH_SHORT).show();
+            if (isFinishing() || isDestroyed() || (exitDialog != null && exitDialog.isShowing())) return;
+            exitDialog = new android.app.AlertDialog.Builder(this)
+                    .setTitle("앱 종료")
+                    .setMessage("앱을 종료할까요?")
+                    .setNegativeButton("취소", (dialog, which) -> dialog.dismiss())
+                    .setPositiveButton("종료", (dialog, which) -> {
+                        CookieManager.getInstance().flush();
+                        finishAndRemoveTask();
+                    })
+                    .create();
+            exitDialog.setOnDismissListener(dialog -> exitDialog = null);
+            exitDialog.show();
         }
     }
 
@@ -416,6 +428,11 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        if (exitDialog != null) {
+            exitDialog.setOnDismissListener(null);
+            exitDialog.dismiss();
+            exitDialog = null;
+        }
         if (android.os.Build.VERSION.SDK_INT >= 33 && backCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
             backCallback = null;

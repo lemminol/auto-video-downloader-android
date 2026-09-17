@@ -1,3 +1,11 @@
+# Android v1.1.9 — 뒤로가기 수정
+
+Android 13 이상은 OnBackInvokedDispatcher로, Android 12 이하는 onBackPressed로 동일하게 WebView 이전 페이지로 이동합니다. 이전 페이지가 없으면 앱을 종료하지 않고 안내 메시지를 표시합니다. 연결 설정 화면의 뒤로가기는 기존대로 메인 화면으로 돌아갑니다.
+
+.github/workflows를 포함한 프로젝트 전체를 GitHub 저장소 루트에 반영하고 기존 Build Android APK 워크플로를 실행하세요. 또는 Android Studio에서 빌드할 수 있습니다. 생성 APK는 AVDv1.1.9.apk입니다. 기존 설치와 동일한 서명 키를 사용해야 덮어쓰기 설치가 가능합니다.
+
+검증: 소스 변경 및 Manifest XML 확인. 현재 환경에 Android SDK가 없어 APK 빌드 및 기기 동작 검증은 수행하지 않았습니다.
+
 # Auto Video Downloader Android v1.1.8
 
 ## 외부 네트워크 HTTP / HTTPS 선택

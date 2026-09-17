@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     private static final int REQ_WIFI_PERMISSION = 1003;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private final Handler main = new Handler(Looper.getMainLooper());
+    private android.window.OnBackInvokedCallback backCallback;
     private EndpointManager endpoints;
     private WebView web;
     private TextView endpointText;
@@ -63,6 +64,11 @@ public class MainActivity extends Activity {
         endpoints = new EndpointManager(this);
         buildUi();
         configureWebView();
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            backCallback = this::navigateBack;
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, backCallback);
+        }
         captureIncoming(getIntent());
         requestWifiPermissionIfNeeded();
         registerNetworkCallback();
@@ -364,8 +370,17 @@ public class MainActivity extends Activity {
         }
     }
 
+    // Android 12 and earlier use this entry point; newer versions use the dispatcher.
     @Override public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack(); else super.onBackPressed();
+        navigateBack();
+    }
+
+    private void navigateBack() {
+        if (web != null && web.canGoBack()) {
+            web.goBack();
+        } else {
+            Toast.makeText(this, "이전 페이지가 없습니다.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override protected void onPause() {
@@ -401,6 +416,10 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        if (android.os.Build.VERSION.SDK_INT >= 33 && backCallback != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
+            backCallback = null;
+        }
         try { ((ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE)).unregisterNetworkCallback(networkCallback); } catch (Exception ignored) {}
         io.shutdownNow();
         if (web != null) { web.stopLoading(); web.destroy(); }

@@ -86,16 +86,16 @@ public class MainActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.rgb(16,20,24));
-        getWindow().setStatusBarColor(Color.rgb(16,20,24));
-        getWindow().setNavigationBarColor(Color.rgb(16,20,24));
+        root.setBackgroundColor(Color.rgb(248,250,252));
+        getWindow().setStatusBarColor(Color.rgb(248,250,252));
+        getWindow().setNavigationBarColor(Color.rgb(248,250,252));
         if (android.os.Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
         }
         applySystemInsets(root, 0, 0, 0, 0);
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setBackgroundColor(Color.rgb(248,247,255));
+        bar.setBackgroundColor(Color.rgb(248,250,252));
         bar.setPadding(dp(14), dp(5), dp(8), dp(5));
         endpointText = new TextView(this);
         endpointText.setText("서버 연결 확인 중…");
@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
     }
 
     private Button smallButton(String text) {
-        Button b = new Button(this);
+        Button b = new Button(this); styleButton(b);
         b.setText(text);
         b.setTextSize(11);
         b.setMinHeight(0); b.setMinWidth(0);
@@ -412,7 +412,7 @@ public class MainActivity extends Activity {
                 // before setContentView(), when its DecorView may still be null.
                 android.view.WindowInsetsController controller = v.getWindowInsetsController();
                 if (controller != null) {
-                    controller.setSystemBarsAppearance(0,
+                    controller.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
                             android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                             | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 }
@@ -443,6 +443,14 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    private void styleButton(Button button) {
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setColor(Color.rgb(99,102,241)); shape.setCornerRadius(dp(12));
+        button.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(0x33FFFFFF), shape, null));
+        button.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{0xFFCBD5E1,Color.WHITE}));
+        button.setAllCaps(false);
+    }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
 

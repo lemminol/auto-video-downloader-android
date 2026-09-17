@@ -50,7 +50,7 @@ public class ConnectionActivity extends Activity {
 
     private ScrollView buildUi() {
         ScrollView scroll = new ScrollView(this);
-        LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(Color.rgb(248,247,255));
+        LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL); root.setBackgroundColor(Color.rgb(248,250,252));
         applySystemInsets(root, dp(18), dp(14), dp(18), dp(28));
         LinearLayout header = row(); Button back = button("←"); back.setOnClickListener(v -> finish()); header.addView(back); TextView title = title("연결"); header.addView(title, new LinearLayout.LayoutParams(0, dp(44), 1)); root.addView(header);
         root.addView(label("🔒  현재 서버 주소")); currentServer = valueText("확인 중…"); root.addView(currentServer);
@@ -214,17 +214,25 @@ public class ConnectionActivity extends Activity {
         });
     }
 
-    private LinearLayout card(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);v.setPadding(dp(16),dp(14),dp(16),dp(14));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);lp.setMargins(0,dp(8),0,dp(8));v.setLayoutParams(lp);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(249,248,255));g.setStroke(dp(1),Color.rgb(220,220,228));g.setCornerRadius(dp(20));v.setBackground(g);return v;}
+    private LinearLayout card(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.VERTICAL);v.setPadding(dp(16),dp(14),dp(16),dp(14));LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);lp.setMargins(0,dp(8),0,dp(8));v.setLayoutParams(lp);GradientDrawable g=new GradientDrawable();g.setColor(Color.WHITE);g.setStroke(dp(1),Color.rgb(226,232,240));g.setCornerRadius(dp(20));v.setBackground(g);return v;}
     private LinearLayout row(){LinearLayout v=new LinearLayout(this);v.setOrientation(LinearLayout.HORIZONTAL);v.setGravity(Gravity.CENTER_VERTICAL);return v;}
     private TextView title(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(24);t.setTextColor(Color.rgb(40,40,48));t.setGravity(Gravity.CENTER_VERTICAL);t.setPadding(dp(12),0,0,0);return t;}
     private TextView section(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(17);t.setTextColor(Color.rgb(48,48,56));t.setPadding(0,dp(4),0,dp(8));return t;}
     private TextView label(String s){TextView t=section(s);t.setPadding(dp(8),dp(12),0,dp(6));return t;}
     private TextView body(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(13);t.setTextColor(Color.rgb(92,92,102));return t;}
-    private TextView valueText(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(16);t.setTextColor(Color.rgb(50,78,146));t.setGravity(Gravity.CENTER_VERTICAL);t.setPadding(dp(12),0,dp(12),0);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(247,246,253));g.setStroke(dp(1),Color.rgb(225,223,232));g.setCornerRadius(dp(16));t.setBackground(g);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,dp(54));lp.setMargins(0,0,0,dp(8));t.setLayoutParams(lp);return t;}
+    private TextView valueText(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(16);t.setTextColor(Color.rgb(79,70,229));t.setGravity(Gravity.CENTER_VERTICAL);t.setPadding(dp(12),0,dp(12),0);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(248,250,252));g.setStroke(dp(1),Color.rgb(226,232,240));g.setCornerRadius(dp(16));t.setBackground(g);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,dp(54));lp.setMargins(0,0,0,dp(8));t.setLayoutParams(lp);return t;}
     private EditText edit(String hint,String value){EditText e=new EditText(this);e.setHint(hint);e.setText(value);e.setTextSize(14);e.setSingleLine(true);e.setPadding(dp(12),0,dp(12),0);GradientDrawable g=new GradientDrawable();g.setColor(Color.WHITE);g.setStroke(dp(1),Color.rgb(190,190,200));g.setCornerRadius(dp(14));e.setBackground(g);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,dp(52));lp.setMargins(0,dp(5),0,dp(5));e.setLayoutParams(lp);return e;}
-    private TextView endpointText(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(12);t.setSingleLine(true);t.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);t.setTextColor(Color.rgb(50,78,146));t.setGravity(Gravity.CENTER_VERTICAL);t.setPadding(dp(10),0,dp(8),0);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(247,246,253));g.setStroke(dp(1),Color.rgb(225,223,232));g.setCornerRadius(dp(12));t.setBackground(g);return t;}
-    private Button compactButton(String text,int width){Button b=new Button(this);b.setText(text);b.setTextSize(11);b.setAllCaps(false);b.setMinHeight(0);b.setMinWidth(0);b.setPadding(0,0,0,0);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(width,dp(30));lp.setMargins(dp(2),0,dp(2),0);b.setLayoutParams(lp);return b;}
-    private Button button(String text){Button b=new Button(this);b.setText(text);b.setTextSize(12);b.setMinHeight(0);b.setMinWidth(0);b.setPadding(dp(10),0,dp(10),0);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,dp(40));lp.setMargins(dp(4),dp(4),dp(4),dp(4));b.setLayoutParams(lp);return b;}
+    private TextView endpointText(String s){TextView t=new TextView(this);t.setText(s);t.setTextSize(12);t.setSingleLine(true);t.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);t.setTextColor(Color.rgb(79,70,229));t.setGravity(Gravity.CENTER_VERTICAL);t.setPadding(dp(10),0,dp(8),0);GradientDrawable g=new GradientDrawable();g.setColor(Color.rgb(248,250,252));g.setStroke(dp(1),Color.rgb(226,232,240));g.setCornerRadius(dp(12));t.setBackground(g);return t;}
+    private Button compactButton(String text,int width){Button b=new Button(this);styleButton(b);b.setText(text);b.setTextSize(11);b.setAllCaps(false);b.setMinHeight(0);b.setMinWidth(0);b.setPadding(0,0,0,0);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(width,dp(30));lp.setMargins(dp(2),0,dp(2),0);b.setLayoutParams(lp);return b;}
+    private Button button(String text){Button b=new Button(this);styleButton(b);b.setText(text);b.setTextSize(12);b.setMinHeight(0);b.setMinWidth(0);b.setPadding(dp(10),0,dp(10),0);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,dp(40));lp.setMargins(dp(4),dp(4),dp(4),dp(4));b.setLayoutParams(lp);return b;}
+    private void styleButton(Button button) {
+        android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
+        shape.setColor(Color.rgb(99,102,241)); shape.setCornerRadius(dp(12));
+        button.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(0x33FFFFFF), shape, null));
+        button.setTextColor(new android.content.res.ColorStateList(new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{0xFFCBD5E1,Color.WHITE}));
+        button.setAllCaps(false);
+    }
     private int dp(int v){return Math.round(v*getResources().getDisplayMetrics().density);}
     private void applySystemInsets(View view, int baseLeft, int baseTop, int baseRight, int baseBottom) {
         view.setOnApplyWindowInsetsListener((v, insets) -> {

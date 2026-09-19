@@ -58,6 +58,23 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private ConnectivityManager.NetworkCallback networkCallback;
     private final Runnable networkReconnect = () -> selectEndpoint(true);
+    private LinearLayout appBar;
+    private View fullscreenView;
+    private WebChromeClient.CustomViewCallback fullscreenCallback;
+    private boolean readerFullscreen;
+    private boolean activityVisible;
+    // Read-only state check on the configured server; no native JS bridge exposed.
+    private final Runnable readerStateCheck = new Runnable() {
+        @Override public void run() {
+            if (!activityVisible || web == null) return;
+            if (belongsToActiveEndpoint(web.getUrl())) {
+                web.evaluateJavascript("Boolean(document.querySelector('#comic-stage.immersive'))", value -> {
+                    if (activityVisible && web != null) setReaderFullscreen("true".equals(value));
+                });
+            } else setReaderFullscreen(false);
+            main.postDelayed(this, 600);
+        }
+    };
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,6 +111,7 @@ public class MainActivity extends Activity {
         }
         applySystemInsets(root, 0, 0, 0, 0);
         LinearLayout bar = new LinearLayout(this);
+        appBar = bar;
         bar.setGravity(Gravity.CENTER_VERTICAL);
         bar.setBackgroundColor(Color.rgb(248,250,252));
         bar.setPadding(dp(14), dp(5), dp(8), dp(5));
@@ -218,6 +236,17 @@ public class MainActivity extends Activity {
     }
 
     private class AppChromeClient extends WebChromeClient {
+        @Override public void onShowCustomView(View view, CustomViewCallback callback) {
+            if (fullscreenView != null) { callback.onCustomViewHidden(); return; }
+            fullscreenView = view;
+            fullscreenCallback = callback;
+            view.setBackgroundColor(Color.BLACK);
+            ViewGroup decor = (ViewGroup)getWindow().getDecorView();
+            decor.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            appBar.setVisibility(View.GONE);
+            setSystemFullscreen(true);
+        }
+        @Override public void onHideCustomView() { hideCustomView(); }
         @Override public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> callback, FileChooserParams params) {
             if (fileCallback != null) fileCallback.onReceiveValue(null);
             fileCallback = callback;
@@ -228,8 +257,14 @@ public class MainActivity extends Activity {
         @Override public boolean onCreateWindow(WebView view, boolean isDialog, boolean isUserGesture, android.os.Message resultMsg) {
             WebView temp = new WebView(MainActivity.this);
             temp.setWebViewClient(new WebViewClient() {
-                @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) { openExternal(request.getUrl()); return true; }
-                @Override public boolean shouldOverrideUrlLoading(WebView v, String url) { openExternal(Uri.parse(url)); return true; }
+                private boolean route(Uri uri) {
+                    if (belongsToActiveEndpoint(uri.toString())) web.loadUrl(uri.toString());
+                    else openExternal(uri);
+                    main.post(temp::destroy);
+                    return true;
+                }
+                @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) { return route(request.getUrl()); }
+                @Override public boolean shouldOverrideUrlLoading(WebView v, String url) { return route(Uri.parse(url)); }
             });
             WebView.WebViewTransport transport = (WebView.WebViewTransport) resultMsg.obj;
             transport.setWebView(temp); resultMsg.sendToTarget(); return true;
@@ -393,6 +428,19 @@ public class MainActivity extends Activity {
     }
 
     private void navigateBack() {
+        if (fullscreenView != null) { hideCustomView(); return; }
+        if (web != null && belongsToActiveEndpoint(web.getUrl())) {
+            web.evaluateJavascript("(function(){if(document.querySelector('#comic-stage.immersive') && typeof comicFullscreen==='function'){comicFullscreen(false);return true;}return false;})()", value -> {
+                if (isFinishing() || isDestroyed()) return;
+                if ("true".equals(value)) setReaderFullscreen(false);
+                else navigatePageBack();
+            });
+            return;
+        }
+        navigatePageBack();
+    }
+
+    private void navigatePageBack() {
         if (web != null && web.canGoBack()) {
             web.goBack();
         } else {
@@ -411,7 +459,48 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void setReaderFullscreen(boolean on) {
+        if (readerFullscreen == on) return;
+        readerFullscreen = on;
+        appBar.setVisibility(on || fullscreenView != null ? View.GONE : View.VISIBLE);
+        if (on) progress.setVisibility(View.GONE);
+        setSystemFullscreen(on || fullscreenView != null);
+    }
+
+    private void setSystemFullscreen(boolean on) {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                c.setSystemBarsBehavior(android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                if (on) c.hide(WindowInsets.Type.systemBars()); else c.show(WindowInsets.Type.systemBars());
+            }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(on ?
+                    View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY : View.SYSTEM_UI_FLAG_VISIBLE);
+        }
+    }
+
+    private void hideCustomView() {
+        if (fullscreenView == null) return;
+        ((ViewGroup)fullscreenView.getParent()).removeView(fullscreenView);
+        fullscreenView = null;
+        WebChromeClient.CustomViewCallback callback = fullscreenCallback;
+        fullscreenCallback = null;
+        if (callback != null) callback.onCustomViewHidden();
+        appBar.setVisibility(readerFullscreen ? View.GONE : View.VISIBLE);
+        setSystemFullscreen(readerFullscreen);
+    }
+
+    @Override protected void onResume() {
+        super.onResume();
+        activityVisible = true;
+        main.removeCallbacks(readerStateCheck);
+        main.post(readerStateCheck);
+    }
+
     @Override protected void onPause() {
+        activityVisible = false;
+        main.removeCallbacks(readerStateCheck);
         CookieManager.getInstance().flush();
         super.onPause();
     }
@@ -444,6 +533,10 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        activityVisible = false;
+        main.removeCallbacks(readerStateCheck);
+        main.removeCallbacks(networkReconnect);
+        hideCustomView();
         if (exitDialog != null) {
             exitDialog.setOnDismissListener(null);
             exitDialog.dismiss();
@@ -469,5 +562,4 @@ public class MainActivity extends Activity {
     }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
-
 

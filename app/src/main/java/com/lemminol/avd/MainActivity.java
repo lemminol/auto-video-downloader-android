@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
     private ConnectivityManager.NetworkCallback networkCallback;
     private final Runnable networkReconnect = () -> selectEndpoint(true);
     private LinearLayout appBar;
+    private LinearLayout rootView;
     private View fullscreenView;
     private WebChromeClient.CustomViewCallback fullscreenCallback;
     private boolean readerFullscreen;
@@ -102,6 +103,7 @@ public class MainActivity extends Activity {
 
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
+        rootView = root;
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.rgb(248,250,252));
         getWindow().setStatusBarColor(Color.rgb(248,250,252));
@@ -180,6 +182,8 @@ public class MainActivity extends Activity {
         web.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         web.getSettings().setBuiltInZoomControls(false);
         web.getSettings().setDisplayZoomControls(false);
+        String defaultUserAgent = web.getSettings().getUserAgentString();
+        web.getSettings().setUserAgentString(defaultUserAgent + " AVDController/" + BuildConfig.VERSION_NAME);
         web.setWebViewClient(new AppWebViewClient());
         web.setWebChromeClient(new AppChromeClient());
         web.setDownloadListener(downloadListener);
@@ -464,7 +468,18 @@ public class MainActivity extends Activity {
         readerFullscreen = on;
         appBar.setVisibility(on || fullscreenView != null ? View.GONE : View.VISIBLE);
         if (on) progress.setVisibility(View.GONE);
-        setSystemFullscreen(on || fullscreenView != null);
+        if (rootView != null) rootView.setBackgroundColor(on ? Color.BLACK : Color.rgb(248,250,252));
+        getWindow().setStatusBarColor(on ? Color.BLACK : Color.rgb(248,250,252));
+        getWindow().setNavigationBarColor(Color.rgb(248,250,252));
+        setSystemFullscreen(fullscreenView != null);
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = getWindow().getInsetsController();
+            if (c != null) {
+                int lightStatus = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS;
+                int lightNavigation = android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                c.setSystemBarsAppearance(on ? lightNavigation : lightStatus | lightNavigation, lightStatus | lightNavigation);
+            }
+        }
     }
 
     private void setSystemFullscreen(boolean on) {
@@ -488,7 +503,7 @@ public class MainActivity extends Activity {
         fullscreenCallback = null;
         if (callback != null) callback.onCustomViewHidden();
         appBar.setVisibility(readerFullscreen ? View.GONE : View.VISIBLE);
-        setSystemFullscreen(readerFullscreen);
+        setSystemFullscreen(false);
     }
 
     @Override protected void onResume() {
@@ -517,7 +532,7 @@ public class MainActivity extends Activity {
                 // before setContentView(), when its DecorView may still be null.
                 android.view.WindowInsetsController controller = v.getWindowInsetsController();
                 if (controller != null) {
-                    controller.setSystemBarsAppearance(android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                    controller.setSystemBarsAppearance((readerFullscreen ? 0 : android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS) | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
                             android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                             | android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 }
@@ -562,4 +577,3 @@ public class MainActivity extends Activity {
     }
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
 }
-
